@@ -28,8 +28,12 @@
 		"@sveltejs/adapter-node": "^5.4.0",
 		"arctic": "^3.7.0",
 		"bcryptjs": "^3.0.3",
-		"better-sqlite3": "^12.4.6",
+		"better-sqlite3": "^11.10.0",
 		"cookie": "^1.0.2",
 		"lucia": "^3.2.2"
+	},
+	"overrides": {
+		"cookie": "^1.0.2",
+		"better-sqlite3": "^11.10.0"
 	}
 }
