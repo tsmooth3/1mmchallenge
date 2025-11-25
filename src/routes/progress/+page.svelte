@@ -1116,10 +1116,6 @@
 		background-color: #2a3a5a;
 	}
 	
-	:global([data-theme='dark']) .progress-bar {
-		background-color: #2a3a5a;
-		border-color: #4a5d8a;
-	}
 	
 	:global([data-theme='dark']) .no-entries {
 		color: #a0b4d0;

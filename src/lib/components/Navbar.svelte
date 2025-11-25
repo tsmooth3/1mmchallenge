@@ -55,10 +55,9 @@
 				{/if}
 			</button>
 			{#if data.user}
-				<a href="/progress" class="btn-add-progress">+Add Progress</a>
+				<a href="/progress" class="btn-add-progress">+Add {data.user.sport}</a>
 				<a href="/profile" class="user-info">
 					<span class="user-name">{data.user.name}</span>
-					<span class="user-sport">({data.user.sport})</span>
 				</a>
 				<button onclick={handleLogout} class="btn-logout">Logout</button>
 			{:else}
@@ -182,12 +181,6 @@
 		text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 	}
 	
-	.user-sport {
-		color: rgba(96, 165, 250, 0.8);
-		font-size: 0.875rem;
-		white-space: nowrap;
-	}
-	
 	.btn-logout {
 		padding: 0.5rem 1rem;
 		background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
@@ -271,10 +264,6 @@
 			font-size: 0.8rem;
 		}
 		
-		.user-sport {
-			font-size: 0.7rem;
-		}
-		
 		.btn-logout {
 			padding: 0.35rem 0.6rem;
 			font-size: 0.8rem;
@@ -319,10 +308,6 @@
 		
 		.user-name {
 			font-size: 0.75rem;
-		}
-		
-		.user-sport {
-			font-size: 0.65rem;
 		}
 		
 		.btn-logout {
