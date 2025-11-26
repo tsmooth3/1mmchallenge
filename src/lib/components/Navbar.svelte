@@ -43,7 +43,9 @@
 <nav class="navbar">
 	<div class="nav-container">
 		<div class="nav-brand">
-			<a href="/">1MM Challenge</a>
+			<a href="/">
+				<img src="/logo.svg" alt="1MM Challenge" class="logo" />
+			</a>
 		</div>
 		
 		<div class="nav-links">
@@ -89,19 +91,21 @@
 	}
 	
 	.nav-brand a {
-		font-size: 1.5rem;
-		font-weight: 700;
-		color: #ffffff;
+		display: flex;
+		align-items: center;
 		text-decoration: none;
-		text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-		white-space: nowrap;
 		transition: all 0.3s ease;
 	}
 	
 	.nav-brand a:hover {
-		color: #60a5fa;
-		text-shadow: 0 2px 12px rgba(96, 165, 250, 0.5);
 		transform: translateY(-1px);
+		opacity: 0.9;
+	}
+	
+	.logo {
+		height: 2.5rem;
+		width: auto;
+		display: block;
 	}
 	
 	.nav-links {
@@ -236,8 +240,8 @@
 			gap: 0.5rem;
 		}
 		
-		.nav-brand a {
-			font-size: 1rem;
+		.logo {
+			height: 2rem;
 		}
 		
 		.nav-links {
@@ -283,8 +287,8 @@
 			padding: 0.4rem 0.5rem;
 		}
 		
-		.nav-brand a {
-			font-size: 0.9rem;
+		.logo {
+			height: 1.75rem;
 		}
 		
 		.nav-links {
