@@ -140,7 +140,7 @@
 						{#each yAxisTicks.slice().reverse() as tick, i}
 							{@const position = ((yAxisTicks.length - 1 - i) / (yAxisTicks.length - 1)) * 100}
 							<div class="y-axis-tick" style="bottom: {position}%">
-								<span class="y-axis-label">{tick.toLocaleString()}</span>
+								<span class="y-axis-label">{formatWithK(tick)}</span>
 							</div>
 						{/each}
 					</div>
@@ -345,7 +345,7 @@
 	
 	.chart-wrapper {
 		display: flex;
-		gap: 0.75rem;
+		gap: 0;
 		align-items: flex-end;
 		overflow: visible;
 		min-height: 300px;
@@ -356,7 +356,7 @@
 		height: 300px;
 		padding-bottom: 2rem;
 		flex-shrink: 0;
-		width: 3.5rem;
+		width: 1.5rem;
 	}
 	
 	.y-axis-tick {
@@ -598,7 +598,7 @@
 		}
 		
 		.chart-wrapper {
-			gap: 1rem;
+			gap: 0;
 			min-height: 350px;
 		}
 		
