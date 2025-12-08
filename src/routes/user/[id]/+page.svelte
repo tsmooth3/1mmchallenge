@@ -42,6 +42,13 @@
 		return nice * magnitude;
 	}
 	
+	// Function to format number with "k" suffix (rounded to nearest thousand)
+	function formatWithK(value: number): string {
+		if (value === 0) return '0';
+		const rounded = Math.round(value / 1000);
+		return `${rounded}k`;
+	}
+	
 	// Calculate y-axis tick values with nice round numbers
 	const yAxisData = $derived.by(() => {
 		if (maxMeters === 0) return { ticks: [0], niceMax: 0 };
@@ -147,7 +154,7 @@
 									title="{monthNames[index]}: {monthData.meters.toLocaleString()}m"
 								>
 									<div class="bar-value" style="opacity: {monthData.meters > 0 ? 1 : 0}">
-										{monthData.meters > 0 ? monthData.meters.toLocaleString() : ''}
+										{monthData.meters > 0 ? formatWithK(monthData.meters) : ''}
 									</div>
 								</div>
 								<div class="bar-label">{monthNames[index]}</div>
@@ -381,9 +388,9 @@
 		display: flex;
 		align-items: flex-end;
 		justify-content: space-around;
-		gap: 0.5rem;
+		gap: 0.25rem;
 		height: 300px;
-		padding: 0 0.5rem;
+		padding: 0 0.25rem;
 		position: relative;
 		overflow: visible;
 	}
@@ -395,7 +402,8 @@
 		align-items: center;
 		justify-content: flex-end;
 		height: 300px;
-		min-width: 40px;
+		min-width: 0;
+		max-width: 2.5rem;
 		position: relative;
 		overflow: visible;
 	}
@@ -604,12 +612,14 @@
 		
 		.chart {
 			height: 350px;
-			gap: 0.75rem;
+			gap: 0.5rem;
+			padding: 0 0.5rem;
 		}
 		
 		.bar-wrapper {
 			height: 350px;
-			min-width: 50px;
+			min-width: 0;
+			max-width: 3rem;
 		}
 		
 		.bar-value {
