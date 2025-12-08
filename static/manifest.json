@@ -1,0 +1,41 @@
+{
+	"name": "1 Million Meter Challenge",
+	"short_name": "1MM Challenge",
+	"description": "Track your progress towards a 1 million meter challenge across various sports",
+	"start_url": "/",
+	"display": "standalone",
+	"background_color": "#ffffff",
+	"theme_color": "#002868",
+	"orientation": "portrait-primary",
+	"icons": [
+		{
+			"src": "/favicon.svg",
+			"sizes": "any",
+			"type": "image/svg+xml",
+			"purpose": "any maskable"
+		},
+		{
+			"src": "/favicon.ico",
+			"sizes": "48x48",
+			"type": "image/x-icon"
+		}
+	],
+	"categories": ["health", "fitness", "sports"],
+	"shortcuts": [
+		{
+			"name": "Log Progress",
+			"short_name": "Log",
+			"description": "Log your daily progress",
+			"url": "/progress",
+			"icons": [{ "src": "/favicon.svg", "sizes": "any" }]
+		},
+		{
+			"name": "Leaderboard",
+			"short_name": "Leaderboard",
+			"description": "View the leaderboard",
+			"url": "/",
+			"icons": [{ "src": "/favicon.svg", "sizes": "any" }]
+		}
+	]
+}
+
