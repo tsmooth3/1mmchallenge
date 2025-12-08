@@ -199,7 +199,7 @@
 						oninput={handleMetersInput}
 						required
 						min="1"
-						step="1"
+						step="0.1"
 						placeholder="Enter meters"
 					/>
 					{#if meters}
@@ -216,7 +216,7 @@
 						oninput={handleMilesInput}
 						required
 						min="1"
-						step="1"
+						step="0.1"
 						placeholder="Enter miles"
 					/>
 					{#if miles}
