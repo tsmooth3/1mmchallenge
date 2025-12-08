@@ -10,6 +10,74 @@
 		const year = target.value;
 		goto(`/user/${data.user?.id}?year=${year}`);
 	}
+	
+	// Calculate monthly totals for the selected year
+	const monthlyData = $derived.by(() => {
+		const months = Array.from({ length: 12 }, (_, i) => ({ month: i + 1, meters: 0 }));
+		
+		if (data.entries) {
+			data.entries.forEach(entry => {
+				const date = new Date(entry.entry_date);
+				const month = date.getMonth() + 1; // 1-12
+				months[month - 1].meters += entry.meters;
+			});
+		}
+		
+		return months;
+	});
+	
+	// Calculate max value for scaling (dynamic per user/year)
+	const maxMeters = $derived(Math.max(...monthlyData.map((m: { month: number; meters: number }) => m.meters), 1));
+	
+	// Function to round up to a nice number
+	function roundUpToNiceNumber(value: number): number {
+		if (value === 0) return 0;
+		const magnitude = Math.pow(10, Math.floor(Math.log10(value)));
+		const normalized = value / magnitude;
+		let nice;
+		if (normalized <= 1) nice = 1;
+		else if (normalized <= 2) nice = 2;
+		else if (normalized <= 5) nice = 5;
+		else nice = 10;
+		return nice * magnitude;
+	}
+	
+	// Calculate y-axis tick values with nice round numbers
+	const yAxisData = $derived.by(() => {
+		if (maxMeters === 0) return { ticks: [0], niceMax: 0 };
+		
+		// Round up the max to a nice number
+		const niceMax = roundUpToNiceNumber(maxMeters);
+		
+		// Determine a nice interval (try to get 4-5 ticks)
+		let interval = niceMax / 4;
+		const magnitude = Math.pow(10, Math.floor(Math.log10(interval)));
+		const normalized = interval / magnitude;
+		let niceInterval;
+		if (normalized <= 1) niceInterval = 1 * magnitude;
+		else if (normalized <= 2) niceInterval = 2 * magnitude;
+		else if (normalized <= 5) niceInterval = 5 * magnitude;
+		else niceInterval = 10 * magnitude;
+		
+		// Generate ticks
+		const ticks = [];
+		for (let value = 0; value <= niceMax; value += niceInterval) {
+			ticks.push(Math.round(value));
+		}
+		
+		// Ensure we have at least the max value
+		if (ticks[ticks.length - 1] < niceMax) {
+			ticks.push(Math.round(niceMax));
+		}
+		
+		return { ticks, niceMax };
+	});
+	
+	const yAxisTicks = $derived(yAxisData.ticks);
+	const niceMax = $derived(yAxisData.niceMax);
+	
+	// Month names
+	const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 </script>
 
 <div class="container">
@@ -53,6 +121,39 @@
 					{:else}
 						—
 					{/if}
+				</div>
+			</div>
+		</div>
+		
+		<div class="chart-section">
+			<h2>Monthly Progress for {data.selectedYear}</h2>
+			<div class="chart-container">
+				<div class="chart-wrapper">
+					<div class="y-axis">
+						{#each yAxisTicks.slice().reverse() as tick, i}
+							{@const position = ((yAxisTicks.length - 1 - i) / (yAxisTicks.length - 1)) * 100}
+							<div class="y-axis-tick" style="bottom: {position}%">
+								<span class="y-axis-label">{tick.toLocaleString()}</span>
+							</div>
+						{/each}
+					</div>
+					<div class="chart">
+						{#each monthlyData as monthData, index}
+							{@const height = niceMax > 0 ? (monthData.meters / niceMax) * 100 : 0}
+							<div class="bar-wrapper">
+								<div 
+									class="bar" 
+									style="height: {height}%"
+									title="{monthNames[index]}: {monthData.meters.toLocaleString()}m"
+								>
+									<div class="bar-value" style="opacity: {monthData.meters > 0 ? 1 : 0}">
+										{monthData.meters > 0 ? monthData.meters.toLocaleString() : ''}
+									</div>
+								</div>
+								<div class="bar-label">{monthNames[index]}</div>
+							</div>
+						{/each}
+					</div>
 				</div>
 			</div>
 		</div>
@@ -220,6 +321,126 @@
 		z-index: 1;
 	}
 	
+	.chart-section {
+		background: white;
+		padding: 1.5rem;
+		border-radius: 0.5rem;
+		box-shadow: 0 4px 12px rgba(0, 40, 104, 0.2);
+		margin-bottom: 1.5rem;
+		border: 2px solid #002868;
+	}
+	
+	.chart-container {
+		overflow-x: auto;
+		overflow-y: visible;
+		padding: 1rem 0;
+	}
+	
+	.chart-wrapper {
+		display: flex;
+		gap: 0.75rem;
+		align-items: flex-end;
+		overflow: visible;
+		min-height: 300px;
+	}
+	
+	.y-axis {
+		position: relative;
+		height: 300px;
+		padding-bottom: 2rem;
+		flex-shrink: 0;
+		width: 3.5rem;
+	}
+	
+	.y-axis-tick {
+		position: absolute;
+		display: flex;
+		align-items: center;
+		transform: translateY(50%);
+	}
+	
+	.y-axis-tick::after {
+		content: '';
+		position: absolute;
+		left: 100%;
+		width: 0.5rem;
+		height: 1px;
+		background-color: #e0e8f5;
+		margin-left: 0.5rem;
+	}
+	
+	.y-axis-label {
+		font-size: 0.75rem;
+		color: #002868;
+		font-weight: 500;
+		white-space: nowrap;
+	}
+	
+	.chart {
+		flex: 1;
+		display: flex;
+		align-items: flex-end;
+		justify-content: space-around;
+		gap: 0.5rem;
+		height: 300px;
+		padding: 0 0.5rem;
+		position: relative;
+		overflow: visible;
+	}
+	
+	.bar-wrapper {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: flex-end;
+		height: 300px;
+		min-width: 40px;
+		position: relative;
+		overflow: visible;
+	}
+	
+	.bar {
+		width: 100%;
+		min-height: 4px;
+		background: linear-gradient(180deg, #B22234 0%, #ff4444 100%);
+		border-radius: 4px 4px 0 0;
+		transition: all 0.3s ease;
+		cursor: pointer;
+		position: relative;
+		border: 1px solid #002868;
+		border-bottom: none;
+	}
+	
+	.bar-value {
+		position: absolute;
+		bottom: 100%;
+		left: 50%;
+		transform: translateX(-50%);
+		margin-bottom: 0.25rem;
+		font-size: 0.625rem;
+		font-weight: 600;
+		color: #002868;
+		white-space: nowrap;
+		pointer-events: none;
+		text-align: center;
+		line-height: 1.2;
+	}
+	
+	.bar:hover {
+		opacity: 0.8;
+		transform: scaleY(1.05);
+		transform-origin: bottom;
+	}
+	
+	.bar-label {
+		margin-top: 0.5rem;
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: #002868;
+		text-align: center;
+	}
+	
 	.entries-section {
 		background: white;
 		padding: 1rem;
@@ -363,6 +584,42 @@
 			margin-bottom: 2rem;
 		}
 		
+		.chart-section {
+			padding: 2rem;
+			margin-bottom: 2rem;
+		}
+		
+		.chart-wrapper {
+			gap: 1rem;
+			min-height: 350px;
+		}
+		
+		.y-axis {
+			height: 350px;
+		}
+		
+		.y-axis-label {
+			font-size: 0.875rem;
+		}
+		
+		.chart {
+			height: 350px;
+			gap: 0.75rem;
+		}
+		
+		.bar-wrapper {
+			height: 350px;
+			min-width: 50px;
+		}
+		
+		.bar-value {
+			font-size: 0.75rem;
+		}
+		
+		.bar-label {
+			font-size: 0.875rem;
+		}
+		
 		.entries-section {
 			padding: 2rem;
 			margin-bottom: 2rem;
@@ -463,6 +720,31 @@
 	}
 	
 	:global([data-theme='dark']) .entry-meters {
+		color: #e0e8f5;
+	}
+	
+	:global([data-theme='dark']) .chart-section {
+		background: #1e2749;
+		border-color: #4a5d8a;
+	}
+	
+	:global([data-theme='dark']) .bar-value {
+		color: #e0e8f5;
+	}
+	
+	:global([data-theme='dark']) .bar {
+		border-color: #4a5d8a;
+	}
+	
+	:global([data-theme='dark']) .bar-label {
+		color: #e0e8f5;
+	}
+	
+	:global([data-theme='dark']) .y-axis-tick::after {
+		background-color: #2a3a5a;
+	}
+	
+	:global([data-theme='dark']) .y-axis-label {
 		color: #e0e8f5;
 	}
 </style>
