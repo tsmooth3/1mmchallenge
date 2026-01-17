@@ -262,6 +262,7 @@
 						<option value="Rowing">Rowing</option>
 						<option value="Rucking">Rucking</option>
 						<option value="Running">Running</option>
+						<option value="Run_Walk_int">Run/Walk intervals</option>
 						<option value="Skiing">Skiing</option>
 						<option value="Swimming">Swimming</option>
 						<option value="Other">Other</option>
