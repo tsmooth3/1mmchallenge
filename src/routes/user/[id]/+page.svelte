@@ -17,15 +17,18 @@
 		
 		if (data.entries) {
 			data.entries.forEach(entry => {
-				const date = new Date(entry.entry_date);
-				const month = date.getMonth() + 1; // 1-12
-				months[month - 1].meters += entry.meters;
+				// Split "2026-01-01" into [2026, 01, 01]
+				const [year, month, day] = entry.entry_date.split('-').map(Number);
+				// month is already 1-indexed from the string, so just use it
+				if (year === data.selectedYear) {
+					months[month - 1].meters += entry.meters;
+				}
 			});
 		}
 		
 		return months;
 	});
-	
+
 	// Calculate max value for scaling (dynamic per user/year)
 	const maxMeters = $derived(Math.max(...monthlyData.map((m: { month: number; meters: number }) => m.meters), 1));
 	
@@ -85,6 +88,65 @@
 	
 	// Month names
 	const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+	// Calculate weekly totals for the selected year
+	const weeklyData = $derived.by(() => {
+		const weeks = Array.from({ length: 52 }, (_, i) => ({ week: i + 1, meters: 0 }));
+		if (data.entries) {
+			data.entries.forEach(entry => {
+				const [year, month, day] = entry.entry_date.split('-').map(Number);
+				if (year === data.selectedYear) {
+					// Get day of year to calculate the 1-52 week index
+					const date = new Date(year, month - 1, day);
+					const start = new Date(year, 0, 0);
+					const diff = (date.getTime() - start.getTime()) + ((start.getTimezoneOffset() - date.getTimezoneOffset()) * 60 * 1000);
+					const oneDay = 1000 * 60 * 60 * 24;
+					const dayOfYear = Math.floor(diff / oneDay);
+					
+					let week = Math.ceil(dayOfYear / 7);
+					if (week > 52) week = 52; // Handle the 365th/366th day
+					
+					weeks[week - 1].meters += entry.meters;
+				}
+			});
+		}
+		return weeks;
+	});
+
+	// Calculate max value for scaling (dynamic per user/year)
+	const maxWeeklyMeters = $derived(Math.max(...weeklyData.map((m: { week: number; meters: number }) => m.meters), 1));
+	// Calculate y-axis tick values with nice round numbers
+	const yAxisDataWeekly = $derived.by(() => {
+		// maxWeeklyMeters is guaranteed to be at least 1 due to your Math.max(..., 1)
+		const niceWeeklyMax = roundUpToNiceNumber(maxWeeklyMeters);
+		
+		let interval = niceWeeklyMax / 4;
+		const magnitude = Math.pow(10, Math.floor(Math.log10(interval)));
+		const normalized = interval / magnitude;
+		let niceInterval;
+		
+		if (normalized <= 1) niceInterval = 1 * magnitude;
+		else if (normalized <= 2) niceInterval = 2 * magnitude;
+		else if (normalized <= 5) niceInterval = 5 * magnitude;
+		else niceInterval = 10 * magnitude;
+		
+		const ticks: number[] = [];
+		for (let value = 0; value <= niceWeeklyMax; value += niceInterval) {
+			ticks.push(Math.round(value));
+		}
+		
+		if (ticks[ticks.length - 1] < niceWeeklyMax) {
+			ticks.push(Math.round(niceWeeklyMax));
+		}
+		
+		return { ticks, niceWeeklyMax };
+	});
+	
+	const yAxisTicksWeekly = $derived(yAxisDataWeekly.ticks);
+	const niceMaxWeekly = $derived(yAxisDataWeekly.niceWeeklyMax);
+	// Week names
+	const weekNames = ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'W8', 'W9', 'W10', 'W11', 'W12', 'W13', 'W14', 'W15', 'W16', 'W17', 'W18', 'W19', 'W20', 'W21', 'W22', 'W23', 'W24', 'W25', 'W26', 'W27', 'W28', 'W29', 'W30', 'W31', 'W32', 'W33', 'W34', 'W35', 'W36', 'W37', 'W38', 'W39', 'W40', 'W41', 'W42', 'W43', 'W44', 'W45', 'W46', 'W47', 'W48', 'W49', 'W50', 'W51', 'W52'];
+	
 </script>
 
 <div class="container">
@@ -132,6 +194,8 @@
 			</div>
 		</div>
 		
+		
+		
 		<div class="chart-section">
 			<h2>Monthly Progress for {data.selectedYear}</h2>
 			<div class="chart-container">
@@ -158,6 +222,39 @@
 									</div>
 								</div>
 								<div class="bar-label">{monthNames[index]}</div>
+							</div>
+						{/each}
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="chart-section">
+			<h2>Weekly Progress for {data.selectedYear}</h2>
+			<div class="chart-container">
+				<div class="chart-wrapper">
+					<div class="y-axis">
+						{#each yAxisTicksWeekly.slice().reverse() as tick, i}
+							{@const position = ((yAxisTicksWeekly.length - 1 - i) / (yAxisTicksWeekly.length - 1)) * 100}
+							<div class="y-axis-tick" style="bottom: {position}%">
+								<span class="y-axis-label">{formatWithK(tick)}</span>
+							</div>
+						{/each}
+					</div>
+					<div class="chart">
+						{#each weeklyData as weekData, index}
+							{@const height = niceMaxWeekly > 0 ? (weekData.meters / niceMaxWeekly) * 100 : 0}
+							<div class="bar-wrapper">
+								<div 
+									class="bar" 
+									style="height: {height}%"
+									title="{weekNames[index]}: {weekData.meters.toLocaleString()}m"
+								>
+									<div class="bar-value" style="opacity: {weekData.meters > 0 ? 1 : 0}">
+										{weekData.meters > 0 ? formatWithK(weekData.meters) : ''}
+									</div>
+								</div>
+								<div class="bar-label">{weekNames[index]}</div>
 							</div>
 						{/each}
 					</div>
