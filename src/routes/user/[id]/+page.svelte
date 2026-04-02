@@ -146,8 +146,11 @@
 	const niceMaxWeekly = $derived(yAxisDataWeekly.niceWeeklyMax);
 	// Week names
 	const weekNames = ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'W8', 'W9', 'W10', 'W11', 'W12', 'W13', 'W14', 'W15', 'W16', 'W17', 'W18', 'W19', 'W20', 'W21', 'W22', 'W23', 'W24', 'W25', 'W26', 'W27', 'W28', 'W29', 'W30', 'W31', 'W32', 'W33', 'W34', 'W35', 'W36', 'W37', 'W38', 'W39', 'W40', 'W41', 'W42', 'W43', 'W44', 'W45', 'W46', 'W47', 'W48', 'W49', 'W50', 'W51', 'W52'];
-	const weeklyAverage = $derived(Math.round(weeklyData.reduce((acc, curr) => acc + curr.meters, 0) / weeklyData.length));
-	const monthlyAverage = $derived(Math.round(monthlyData.reduce((acc, curr) => acc + curr.meters, 0) / monthlyData.length));
+	// Calculate weekly and monthly averages only for completed weeks and months
+	const completedWeeks = $derived(weeklyData.filter(week => week.meters > 0).length);
+	const completedMonths = $derived(monthlyData.filter(month => month.meters > 0).length);
+	const weeklyAverage = $derived(Math.round(weeklyData.reduce((acc, curr) => acc + curr.meters, 0) / completedWeeks));
+	const monthlyAverage = $derived(Math.round(monthlyData.reduce((acc, curr) => acc + curr.meters, 0) / completedMonths));
 </script>
 
 <div class="container">
@@ -194,11 +197,13 @@
 			</div>
 			<div class="stat-card">
 				<div class="stat-label">Weekly Average</div>
-				<div class="stat-value">{weeklyAverage.toLocaleString()}m/week</div>
+				<div class="stat-label">Completed Weeks</div>
+				<div class="stat-value">{completedWeeks > 0 ? (weeklyAverage.toLocaleString()) : '—'}m/week</div>
 			</div>
 			<div class="stat-card">
 				<div class="stat-label">Monthly Average</div>
-				<div class="stat-value">{monthlyAverage.toLocaleString()}m/month</div>
+				<div class="stat-label">Completed Months</div>
+				<div class="stat-value">{completedMonths > 0 ? (monthlyAverage.toLocaleString()) : '—'}m/month</div>
 			</div>
 		</div>
 		
