@@ -271,6 +271,7 @@
 						<thead>
 							<tr>
 								<th>Date</th>
+								<th>Week</th>
 								<th>Time (ET)</th>
 								<th>Meters</th>
 							</tr>
@@ -279,8 +280,16 @@
 							{#each data.entries as entry}
 								{@const displayTime = entry.entry_timestamp ? formatEasternDateTime(entry.entry_timestamp) : { date: entry.entry_date, time: entry.entry_time || '—' }}
 								{@const dateParts = displayTime.date.split('-')}
+								{@const [year, month, day] = entry.entry_date.split('-').map(Number)}
+								{@const date = new Date(year, month - 1, day)}
+								{@const start = new Date(year, 0, 0)}
+								{@const diff = (date.getTime() - start.getTime()) + ((start.getTimezoneOffset() - date.getTimezoneOffset()) * 60 * 1000)}
+								{@const oneDay = 1000 * 60 * 60 * 24}
+								{@const dayOfYear = Math.floor(diff / oneDay)}
+								{@const week = Math.ceil(dayOfYear / 7)}
 								<tr>
 									<td>{dateParts[1]}/{dateParts[2]}/{dateParts[0]}</td>
+									<td>{weekNames[week - 1]}</td>
 									<td>{displayTime.time}</td>
 									<td>{entry.meters.toLocaleString()}m</td>
 								</tr>
@@ -294,11 +303,18 @@
 					{#each data.entries as entry}
 						{@const displayTime = entry.entry_timestamp ? formatEasternDateTime(entry.entry_timestamp) : { date: entry.entry_date, time: entry.entry_time || '—' }}
 						{@const dateParts = displayTime.date.split('-')}
+						{@const [year, month, day] = entry.entry_date.split('-').map(Number)}
+						{@const date = new Date(year, month - 1, day)}
+						{@const start = new Date(year, 0, 0)}
+						{@const diff = (date.getTime() - start.getTime()) + ((start.getTimezoneOffset() - date.getTimezoneOffset()) * 60 * 1000)}
+						{@const oneDay = 1000 * 60 * 60 * 24}
+						{@const dayOfYear = Math.floor(diff / oneDay)}
+						{@const week = Math.ceil(dayOfYear / 7)}
 						<div class="entry-card">
 							<div class="entry-card-header">
 								<div class="entry-date-time">
 									<div class="entry-date">{dateParts[1]}/{dateParts[2]}/{dateParts[0]}</div>
-									<div class="entry-time">{displayTime.time}</div>
+									<div class="entry-time">{displayTime.time} {weekNames[week - 1]}</div>
 								</div>
 								<div class="entry-meters">{entry.meters.toLocaleString()}m</div>
 							</div>
