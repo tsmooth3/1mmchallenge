@@ -147,10 +147,66 @@
 	// Week names
 	const weekNames = ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'W8', 'W9', 'W10', 'W11', 'W12', 'W13', 'W14', 'W15', 'W16', 'W17', 'W18', 'W19', 'W20', 'W21', 'W22', 'W23', 'W24', 'W25', 'W26', 'W27', 'W28', 'W29', 'W30', 'W31', 'W32', 'W33', 'W34', 'W35', 'W36', 'W37', 'W38', 'W39', 'W40', 'W41', 'W42', 'W43', 'W44', 'W45', 'W46', 'W47', 'W48', 'W49', 'W50', 'W51', 'W52'];
 	// Calculate weekly and monthly averages only for completed weeks and months
-	const completedWeeks = $derived(weeklyData.filter(week => week.meters > 0).length);
-	const completedMonths = $derived(monthlyData.filter(month => month.meters > 0).length);
-	const weeklyAverage = $derived(Math.round(weeklyData.reduce((acc, curr) => acc + curr.meters, 0) / completedWeeks));
-	const monthlyAverage = $derived(Math.round(monthlyData.reduce((acc, curr) => acc + curr.meters, 0) / completedMonths));
+    // Get current calendar boundaries
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth() + 1;
+    
+    // Calculate current week using your exact date logic
+    const startOfCurrentYear = new Date(currentYear, 0, 0);
+    const timeDiff = (currentDate.getTime() - startOfCurrentYear.getTime()) + ((startOfCurrentYear.getTimezoneOffset() - currentDate.getTimezoneOffset()) * 60 * 1000);
+    const currentDayOfYear = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+    const currentWeek = Math.min(Math.ceil(currentDayOfYear / 7), 52);
+
+    const monthlyStats = $derived.by(() => {
+        if (data.selectedYear < currentYear) {
+            // Past years: sum everything, divide by 12
+            const total = monthlyData.reduce((acc, curr) => acc + curr.meters, 0);
+            return { avg: Math.round(total / 12), count: 12 };
+        } else if (data.selectedYear === currentYear) {
+            // Current year: sum only fully completed months
+            const count = Math.max(1, currentMonth - 1); // Math.max prevents dividing by 0 in January
+            
+            if (currentMonth === 1) {
+                // If it's January, just return January's current average so it doesn't break
+                return { avg: monthlyData[0].meters, count: 1 };
+            }
+            
+            const total = monthlyData
+                .filter(m => m.month < currentMonth)
+                .reduce((acc, curr) => acc + curr.meters, 0);
+                
+            return { avg: Math.round(total / count), count };
+        }
+        return { avg: 0, count: 0 };
+    });
+
+    const weeklyStats = $derived.by(() => {
+        if (data.selectedYear < currentYear) {
+            // Past years: sum everything, divide by 52
+            const total = weeklyData.reduce((acc, curr) => acc + curr.meters, 0);
+            return { avg: Math.round(total / 52), count: 52 };
+        } else if (data.selectedYear === currentYear) {
+            // Current year: sum only fully completed weeks
+            const count = Math.max(1, currentWeek - 1); 
+            
+            if (currentWeek === 1) {
+                return { avg: weeklyData[0].meters, count: 1 };
+            }
+            
+            const total = weeklyData
+                .filter(w => w.week < currentWeek)
+                .reduce((acc, curr) => acc + curr.meters, 0);
+                
+            return { avg: Math.round(total / count), count };
+        }
+        return { avg: 0, count: 0 };
+    });
+
+    const completedWeeks = $derived(weeklyStats.count);
+    const completedMonths = $derived(monthlyStats.count);
+    const weeklyAverage = $derived(weeklyStats.avg);
+    const monthlyAverage = $derived(monthlyStats.avg);
 </script>
 
 <div class="container">
